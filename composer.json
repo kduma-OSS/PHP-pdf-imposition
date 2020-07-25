@@ -1,0 +1,42 @@
+{
+    "name": "kduma/pdf-imposition",
+    "description": "PDF Imposition Toolkit",
+    "keywords": [
+        "kduma",
+        "pdf-imposition"
+    ],
+    "homepage": "https://github.com/kduma/pdf-imposition",
+    "license": "GPL-2.0-or-later",
+    "type": "library",
+    "authors": [
+        {
+            "name": "Krystian Duma",
+            "email": "git@krystian.duma.sh",
+            "role": "Developer"
+        }
+    ],
+    "require": {
+        "php": "^7.1"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^7.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Kduma\\PdfImposition\\": "src"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Kduma\\PdfImposition\\Tests\\": "tests"
+        }
+    },
+    "scripts": {
+        "test": "vendor/bin/phpunit",
+        "test-coverage": "vendor/bin/phpunit --coverage-html coverage"
+
+    },
+    "config": {
+        "sort-packages": true
+    }
+}

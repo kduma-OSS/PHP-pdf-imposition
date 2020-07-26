@@ -31,4 +31,22 @@ class PdfSource
 
         return $pages->toArray();
     }
+
+    public function readAsCutStacks(string $file, int $boxes_count, int $reset_every = null, bool $duplex = false)
+    {
+        $reset_every ??= 10000;
+
+        $pages = collect($this->read($file, $duplex))
+            ->chunk($reset_every * $boxes_count)
+            ->map(function (Collection $collection) use ($boxes_count) {
+                return $collection
+                    ->groupBy(fn($list, $key) => $key % $boxes_count)
+                    ->collapse();
+            })
+            ->collapse();
+
+
+
+        return $pages->toArray();
+    }
 }

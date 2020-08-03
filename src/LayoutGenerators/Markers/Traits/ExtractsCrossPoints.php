@@ -62,11 +62,14 @@ trait ExtractsCrossPoints
 
 
         }
-        return collect([collect($horizontal), collect($vertical)])
-            ->map(function (Collection $collection) {
-                return $collection->map(fn(array $points) => collect($points))
-                    ->map(fn(Collection $collection) => $collection->unique());
-            })
-            ->toArray();
+
+        $points = [$horizontal, $vertical];
+        $points = array_map(function (array $points) {
+            return array_map(function (array $points) {
+                return array_unique($points);
+            }, $points);
+        }, $points);
+
+        return $points;
     }
 }

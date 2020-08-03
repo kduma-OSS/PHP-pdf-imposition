@@ -22,31 +22,32 @@ class PdfSource
         $mpdf = new \Mpdf\Mpdf();
         $count = $mpdf->SetSourceFile($file);
 
-        $pages = collect(range(1, $count))
-            ->map(fn($page_number) => new PdfPage($file, $page_number));
+        $pages = array_map(fn($page_number) => new PdfPage($file, $page_number), range(1, $count));
 
         if($duplex) {
-            $pages = $pages->chunk(2)->map(fn(Collection $row) => new DuplexPdfPage($row->first(), $row->last()));
+            $pages = array_map(fn($page) => new DuplexPdfPage($page[0], $page[1]), array_chunk($pages, 2));
         }
 
-        return $pages->toArray();
+        return $pages;
     }
 
     public function readAsCutStacks(string $file, int $boxes_count, int $reset_every = null, bool $duplex = false)
     {
         $reset_every ??= 10000;
 
-        $pages = collect($this->read($file, $duplex))
-            ->chunk($reset_every * $boxes_count)
-            ->map(function (Collection $collection) use ($boxes_count) {
-                return $collection
-                    ->groupBy(fn($list, $key) => $key % $boxes_count)
-                    ->collapse();
-            })
-            ->collapse();
+        $pages = $this->read($file, $duplex);
+        $pages = array_chunk($pages, $reset_every * $boxes_count);
+        $pages = array_map(function ($group) use ($boxes_count) {
+            $positions = [];
 
+            foreach ($group as $key => $item) {
+                $positions[$key % $boxes_count][] = $item;
+            }
 
+            return array_merge([], ...$positions);
+        }, $pages);
+        $pages = array_merge([], ...$pages);
 
-        return $pages->toArray();
+        return $pages;
     }
 }

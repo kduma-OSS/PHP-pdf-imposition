@@ -17,8 +17,7 @@
     ],
     "require": {
         "php": "^7.4",
-        "mpdf/mpdf": "^8.0",
-        "tightenco/collect": "^7.19"
+        "mpdf/mpdf": "^8.0"
     },
     "require-dev": {
         "phpunit/phpunit": "^7.0"

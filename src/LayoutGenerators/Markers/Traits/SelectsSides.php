@@ -68,7 +68,7 @@ trait SelectsSides
         if($this->printOnFront !== null && (!$this->printOnFront || $back) && ($this->printOnFront || !$back))
             return false;
 
-        if(($page_number - 1) % $this->printEvery)
+        if(($page_number - 1) % $this->printEvery) // to fix
             return false;
 
         return true;

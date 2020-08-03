@@ -33,39 +33,37 @@ class PdfImposer
 
     public function export(array $cards, string $output_file): void
     {
-        $cards = collect($cards);
-
-        $is_duplex = !! $cards->filter(fn($source) => $source instanceof DuplexPdfPage)->count();
+        $is_duplex = count(array_filter($cards, fn($source) => $source instanceof DuplexPdfPage)) != 0;
 
         $this->renderer->start();
-        $this->renderer->preload($cards->toArray());
+        $this->renderer->preload($cards);
 
         $page_number = 1;
-        $cards
-            ->chunk($this->layoutGenerator->getBoxesCount())
-            ->flatMap(function (Collection $boxes) use (&$page_number, $is_duplex) {
-                if ($is_duplex) {
-                    return [
-                        $this->layoutGenerator->getLayout(false, $page_number, $boxes->count())->setSources(
-                            $boxes
-                                ->map(fn($page) => $page instanceof DuplexPdfPage ? $page->getFront() : $page)
-                                ->toArray()
-                        ),
-                        $this->layoutGenerator->getLayout(true, $page_number++, $boxes->count())->setSources(
-                            $boxes
-                                ->map(fn($page) => $page instanceof DuplexPdfPage ? $page->getBack() : $page)
-                                ->toArray()
-                        )
-                    ];
-                } else {
-                    return [
-                        $this->layoutGenerator->getLayout(false, $page_number++, $boxes->count())->setSources(
-                            $boxes->toArray()
-                        )
-                    ];
-                }
-            })
-            ->each(fn(PageLayoutConfiguration $layout) => $this->renderer->render($layout));
+        $cards = array_chunk($cards, $this->layoutGenerator->getBoxesCount());
+        $cards = array_map(function ($boxes) use (&$page_number, $is_duplex) {
+            if ($is_duplex) {
+                return [
+                    $this->layoutGenerator->getLayout(false, $page_number, count($boxes))->setSources(
+                        array_map(fn($page) => $page instanceof DuplexPdfPage ? $page->getFront() : $page, $boxes)
+                    ),
+                    $this->layoutGenerator->getLayout(true, $page_number++, count($boxes))->setSources(
+                        array_map(fn($page) => $page instanceof DuplexPdfPage ? $page->getBack() : $page, $boxes)
+                    )
+                ];
+            } else {
+                return [
+                    $this->layoutGenerator->getLayout(false, $page_number++, count($boxes))->setSources(
+                        $boxes
+                    )
+                ];
+            }
+        }, $cards);
+        $cards = array_merge([], ...$cards);
+
+        /** @var PageLayoutConfiguration $layout */
+        foreach ($cards as $layout) {
+            $this->renderer->render($layout);
+        }
 
         file_put_contents($output_file, $this->renderer->finish());
     }

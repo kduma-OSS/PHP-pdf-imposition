@@ -108,18 +108,17 @@ class PrinterBoxCutMarkings implements PageLayoutGeneratorInterface
                     )
                 );
 
-                collect($values)
-                    ->unique()
-                    ->reject(fn($v) => $v == min($values) || $v == max($values))
-                    ->each(function ($v) use ($position, $layout) {
-                        $layout->addLine(
-                            Line::horizontal(
-                                Point::make($v, (float)$position)->add(-$this->inside, 0),
-                                $this->inside * 2,
-                                $this->width
-                            )
-                        );
-                    });
+                $values = array_unique($values);
+                $values = array_filter($values, fn($v) => $v != min($values) && $v != max($values));
+                foreach ($values as $v) {
+                    $layout->addLine(
+                        Line::horizontal(
+                            Point::make($v, (float)$position)->add(-$this->inside, 0),
+                            $this->inside * 2,
+                            $this->width
+                        )
+                    );
+                }
             }
         } else {
             foreach ($vertical as $position => $values) {
@@ -138,18 +137,18 @@ class PrinterBoxCutMarkings implements PageLayoutGeneratorInterface
                     )
                 );
 
-                collect($values)
-                    ->unique()
-                    ->reject(fn($v) => $v == min($values) || $v == max($values))
-                    ->each(function ($v) use ($position, $layout) {
-                        $layout->addLine(
-                            Line::vertical(
-                                Point::make((float)$position, $v)->add(-$this->inside, 0),
-                                $this->inside * 2,
-                                $this->width
-                            )
-                        );
-                    });
+
+                $values = array_unique($values);
+                $values = array_filter($values, fn($v) => $v != min($values) && $v != max($values));
+                foreach ($values as $v) {
+                    $layout->addLine(
+                        Line::vertical(
+                            Point::make($v, (float)$position)->add(-$this->inside, 0),
+                            $this->inside * 2,
+                            $this->width
+                        )
+                    );
+                }
             }
         }
 

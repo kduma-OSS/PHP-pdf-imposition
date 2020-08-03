@@ -27,23 +27,28 @@ class MpdfRenderer implements PdfRendererInterface
 
     public function preload(array $sources)
     {
-        collect($sources)
-            ->flatMap(fn($p) => $p instanceof DuplexPdfPage ? [$p->getFront(), $p->getBack()] : [$p])
-            ->groupBy(fn(PdfPage $p) => $p->getFile())
-            ->each(function (Collection $collection, string $file) {
-                $this->mpdf->SetSourceFile($file);
+        $sources = array_map(fn($p) => $p instanceof DuplexPdfPage ? [$p->getFront(), $p->getBack()] : [$p], $sources);
+        $sources = array_merge([], ...$sources);
 
-                $collection
-                    ->map(fn(PdfPage $p) => $p->getPage())
-                    ->unique()
-                    ->each(function (int $page_number) use ($file) {
-                        $key = "{$file}:{$page_number}";
+        $files = [];
 
-                        if(!isset($this->templates[$key])) {
-                            $this->templates[$key] = $this->mpdf->ImportPage($page_number);
-                        }
-                    });
-            });
+        /** @var PdfPage $p */
+        foreach ($sources as $p) {
+            $files[$p->getFile()][] = $p;
+        }
+
+        foreach ($files as $file => $pages) {
+            $this->mpdf->SetSourceFile($file);
+            $pages = array_map(fn(PdfPage $p) => $p->getPage(), $pages);
+            $pages = array_unique($pages);
+            foreach ($pages as $page_number) {
+                $key = "{$file}:{$page_number}";
+
+                if(!isset($this->templates[$key])) {
+                    $this->templates[$key] = $this->mpdf->ImportPage($page_number);
+                }
+            }
+        }
     }
 
     public function render(PageLayoutConfiguration $page)
